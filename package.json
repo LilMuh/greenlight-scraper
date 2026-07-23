@@ -9,8 +9,12 @@
     "start": "node --env-file-if-exists=.env --import tsx src/index.ts",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }
