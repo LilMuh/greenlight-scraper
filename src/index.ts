@@ -10,7 +10,6 @@ import type { ScrapeRequest } from "./types.js";
 const PORT = Number(process.env.PORT ?? 8090);
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_HOLES = 18;
-const DEFAULT_PLAYERS = 4;
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
@@ -52,7 +51,6 @@ const server = createServer(async (req, res) => {
     }
 
     const holes = request.holes ?? DEFAULT_HOLES;
-    const players = request.players ?? DEFAULT_PLAYERS;
 
     try {
       const courses = selectCourses(request.source, request.site, request.courseIds);
@@ -63,7 +61,7 @@ const server = createServer(async (req, res) => {
 
       const teeTimes = await scrape(request);
       const written = await saveTeeTimes(
-        { source: request.source, site, date: request.date, holes, players, courseIds: courses.map((c) => c.id) },
+        { source: request.source, site, date: request.date, holes, courseIds: courses.map((course) => course.id) },
         teeTimes,
       );
 

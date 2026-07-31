@@ -15,14 +15,17 @@ const SEARCH_PATH = "/onlineresweb/search-teetime?TeeOffTimeMin=0&TeeOffTimeMax=
 // 等 SPA 发出 TeeTimes 响应的最长时间
 const TEE_TIMES_TIMEOUT_MS = 45_000;
 
+// 用 numberOfPlayer=0 查询，才能拿到每个时段真实的部分空位（1/2/3/4），而不是只看到「已能约满 4 人」的时段
+const QUERY_ALL_SEATS = "0";
+
 // TeeTimes 响应里每个时段我们会用到的字段
 type CpsSlot = {
   startTime: string; // "2026-07-11T18:09:00"
   courseId: number;
   courseName: string;
   holes: number;
-  minPlayer: number;
-  maxPlayer: number;
+  maxPlayer: number; // 该时段当前真实空位数（0–4）= available_seats
+  availableParticipantNo?: number[]; // 空位座次数组，其 .length == maxPlayer，用作兜底
   shItemPrices?: { price?: number; displayPrice?: number }[];
 };
 
@@ -47,7 +50,6 @@ async function fetchCpsSlots(
   cpsCourseIds: number[],
   isoDate: string,
   holes: number,
-  players: number,
 ): Promise<CpsSlot[]> {
   const wantedSearchDate = toCpsSearchDate(isoDate);
   const wantedCourseCsv = cpsCourseIds.join(",");
@@ -78,14 +80,14 @@ async function fetchCpsSlots(
             const alreadyOurParams =
               url.searchParams.get("searchDate") === wantedSearchDate &&
               url.searchParams.get("courseIds") === wantedCourseCsv &&
-              url.searchParams.get("numberOfPlayer") === String(players);
+              url.searchParams.get("numberOfPlayer") === QUERY_ALL_SEATS;
 
             if (alreadyOurParams) {
               await cdp.sendCommand("Fetch.continueRequest", { requestId: paused.requestId });
             } else {
               url.searchParams.set("searchDate", wantedSearchDate);
               url.searchParams.set("courseIds", wantedCourseCsv);
-              url.searchParams.set("numberOfPlayer", String(players));
+              url.searchParams.set("numberOfPlayer", QUERY_ALL_SEATS);
               url.searchParams.set("holes", String(holes));
               await cdp.sendCommand("Fetch.continueRequest", { requestId: paused.requestId, url: url.toString() });
             }
@@ -111,7 +113,8 @@ async function fetchCpsSlots(
     });
 
     const parsed = JSON.parse(responseBody) as { isSuccess?: boolean; content?: CpsSlot[] };
-    return parsed.content ?? [];
+    // content 有时不是数组（如当天已过、无可订时段时会是 null 或一个提示对象），统一当成空
+    return Array.isArray(parsed.content) ? parsed.content : [];
   } finally {
     await cdp.sendCommand("Fetch.disable").catch(() => {});
     close();
@@ -121,6 +124,7 @@ async function fetchCpsSlots(
 /** 把 CPS 原始时段转成我们统一的 TeeTime。cpsIdToSlug 用来回填我们的球场 slug。 */
 function toTeeTime(slot: CpsSlot, holes: number, cpsIdToSlug: Map<number, string>): TeeTime {
   const fee = slot.shItemPrices?.[0];
+  const availableSeats = slot.maxPlayer ?? slot.availableParticipantNo?.length ?? 0; // 当前真实空位数
   return {
     courseId: cpsIdToSlug.get(slot.courseId) ?? String(slot.courseId),
     time: slot.startTime.slice(11, 16), // "18:09"
@@ -129,9 +133,8 @@ function toTeeTime(slot: CpsSlot, holes: number, cpsIdToSlug: Map<number, string
     holes: slot.holes ?? holes,
     price: fee?.price ?? fee?.displayPrice ?? 0, // 单人 green fee，税前
     cartPrice: null, // 这个接口只给 green fee，不含球车价
-    available: true, // 能出现在 content 里就是可订
-    minPlayer: slot.minPlayer,
-    maxPlayer: slot.maxPlayer,
+    available: availableSeats > 0, // 有空位才算可订
+    availableSeats,
   };
 }
 
@@ -139,13 +142,13 @@ function toTeeTime(slot: CpsSlot, holes: number, cpsIdToSlug: Map<number, string
  * 抓一批 CPS 球场（必须同属一个 site）在某天的时段。
  * 一次浏览器导航覆盖所有球场，省去逐个球场重复开浏览器。
  */
-export async function scrapeCps(courses: CpsCourse[], isoDate: string, holes = 18, players = 4): Promise<TeeTime[]> {
+export async function scrapeCps(courses: CpsCourse[], isoDate: string, holes = 18): Promise<TeeTime[]> {
   if (courses.length === 0) return [];
 
   const site = courses[0]!.site;
   const cpsCourseIds = courses.map((course) => course.cpsCourseId);
   const cpsIdToSlug = new Map(courses.map((course) => [course.cpsCourseId as number, course.id]));
 
-  const slots = await fetchCpsSlots(site, cpsCourseIds, isoDate, holes, players);
+  const slots = await fetchCpsSlots(site, cpsCourseIds, isoDate, holes);
   return slots.map((slot) => toTeeTime(slot, holes, cpsIdToSlug));
 }

@@ -7,7 +7,7 @@ import { scrapeCps } from "./cps.js";
 
 /** 按 ScrapeRequest 抓取并返回统一的 TeeTime 列表。 */
 export async function scrape(request: ScrapeRequest): Promise<TeeTime[]> {
-  const { source, site, courseIds, date, holes = 18, players = 4 } = request;
+  const { source, site, courseIds, date, holes = 18 } = request;
   const courses = selectCourses(source, site, courseIds);
 
   if (courses.length === 0) {
@@ -16,7 +16,7 @@ export async function scrape(request: ScrapeRequest): Promise<TeeTime[]> {
 
   switch (source) {
     case "cps":
-      return scrapeCps(courses as CpsCourse[], date, holes, players);
+      return scrapeCps(courses as CpsCourse[], date, holes);
     default:
       throw new Error(`暂不支持的 source: ${source}`);
   }

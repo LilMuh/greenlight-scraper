@@ -8,9 +8,8 @@ export type TeeTime = {
   holes: number;
   price: number; // green fee per player
   cartPrice: number | null;
-  available: boolean;
-  minPlayer?: number;
-  maxPlayer?: number;
+  available: boolean; // seen bookable this round (available_seats > 0)
+  availableSeats: number; // real open seats for this slot, 0–4 (CPS maxPlayer)
 };
 
 // Body of POST /scrape.
@@ -20,7 +19,6 @@ export type ScrapeRequest = {
   courseIds?: string[]; // our course slugs; omit to scrape every configured course for the source/site
   date: string; // "YYYY-MM-DD"
   holes?: number;
-  players?: number;
 };
 
 export type ScrapeResponse = {
