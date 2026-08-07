@@ -65,3 +65,13 @@ variables (`BROWSER_SERVICE_URL`, `BROWSER_PROFILE_ID`, `BROWSER_API_KEY`) — s
 `.env.example`. You bring your own service; one open-source option is
 [Open-Anti-Browser](https://github.com/Wtcity22/Open-Anti-Browser.git). No
 service details or credentials are committed to this repo.
+
+## License
+
+[GNU Affero General Public License v3.0](LICENSE).
+
+You may use, modify and redistribute this code. The Affero clause adds one
+condition on top of the GPL: if you run a modified version as a network service,
+you must offer its source to the people using it.
+
+All four GreenLight repositories are under the same license.
