@@ -49,8 +49,22 @@ const EXTRACT_SCRIPT = String.raw`(() => {
     return { status: "waiting" };
   }
 
-  // 地点信息都在主面板里。限定范围，免得扫到侧边栏里别的商户
-  const panel = document.querySelector('[role="main"]') || document.body;
+  // 页面上可能同时有两个 role="main"：
+  //   一个是搜索结果列表（内含 role="feed"，没有 aria-label，不含地址钩子）
+  //   一个是地点详情面板（aria-label 就是地点名，地址钩子在这里）
+  // 什么时候会有两个：URL 带着搜索上下文时（形如 .../data=...!2m1!1s<搜索词>...）。
+  // 我们自己存的 mapsUrl 就可能是这种——第一次是从结果列表点进去拿到的。
+  //
+  // 取第一个 role="main" 会拿到结果列表：地址永远找不到，评分则读成列表里第一家商户的。
+  // 那家不一定是我们要的球场，而这种错是静默的——库里躺着一个看着正常的评分。
+  // 所以显式挑地点面板：先认地址钩子，其次认「不含 feed」的那个。
+  const mains = [...document.querySelectorAll('[role="main"]')];
+  const panel =
+    mains.find((element) => element.querySelector('[data-item-id="address"]')) ||
+    mains.find((element) => !element.querySelector('[role="feed"]'));
+
+  // 地点面板还没渲染出来（页面刚开始加载时只有结果列表）。继续轮询，别在结果列表上取值
+  if (!panel) return { status: "waiting" };
 
   // --- 地址 -----------------------------------------------------------------
   // 首选 data-item-id="address"：这是 Google 给「复制地址」按钮的稳定钩子。
@@ -71,6 +85,12 @@ const EXTRACT_SCRIPT = String.raw`(() => {
   let rating = null;
   let ratingCount = null;
   for (const element of panel.querySelectorAll("[aria-label]")) {
+    // 别人的星级：地点面板里嵌着一条条评论卡（role="article"，label 形如
+    // "4.0 stars 182 Reviews"），结果列表里则是别家商户的卡片。两种都会命中下面的
+    // 星级正则，读到的却不是这个球场的总评分。现在只是靠 DOM 顺序侥幸躲过——
+    // 面板自己那条恰好排在前面。显式跳掉，别指望顺序。
+    if (element.closest('[role="article"], [role="feed"]')) continue;
+
     const label = (element.getAttribute("aria-label") || "").trim();
     if (rating === null) {
       const match = label.match(/^([0-5][.,]\d)\s*stars?\b/i) || label.match(/^rated\s+([0-5][.,]\d)\b/i);
