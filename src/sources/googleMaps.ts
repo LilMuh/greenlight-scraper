@@ -23,6 +23,7 @@ const POLL_INTERVAL_MS = 500;
 /** site → 拼进搜索词的地区，避免搜到同名的外地球场。 */
 const SITE_REGION: Record<string, string> = {
   golfvancouver: "Vancouver BC",
+  golfburnaby: "Burnaby BC",
 };
 
 /**
