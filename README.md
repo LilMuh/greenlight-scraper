@@ -9,8 +9,9 @@ The scraper is stateless: the backend tells it what to fetch, it returns
 normalized results. It never touches the database.
 
 > Current status: **CPS source working** (golfvancouver — Fraserview / Langara /
-> McCleery; golfburnaby — Burnaby Mountain / Riverway), via the browser service
-> below. More sources (ChronoGolf) to come.
+> McCleery; golfburnaby — Burnaby Mountain / Riverway; westcoastgolfgroup —
+> Hazelmere / Belmont / Swaneset Resort / Swaneset Links), via the browser
+> service below. More sources (ChronoGolf) to come.
 
 ## Run
 
