@@ -5,7 +5,8 @@
 // 是 Burnaby Mountain，所以每个站点一个枚举，不存在一张跨站点的总表。
 //
 // 数字都是从站点自己的 ${onlineApi}/OnlineCourses 响应实测抄下来的，不是猜的：
-//   golfvancouver 2026-07-08，golfburnaby 2026-08-24，westcoastgolfgroup 2026-09-03。
+//   golfvancouver 2026-07-08，golfburnaby 2026-08-24，westcoastgolfgroup 2026-09-03，
+//   kingslinks 2026-09-05。
 
 export enum GolfVancouverCourseId {
   LANGARA = 1,
@@ -25,6 +26,17 @@ export enum WestCoastGolfGroupCourseId {
   BELMONT = 2,
   SWANESET_RESORT = 3,
   SWANESET_LINKS = 4,
+}
+
+// Kings Links by the Sea（kingslinks.cps.golf，Delta）。整个站点只有这一个球场，
+// 枚举只有一项——留着是为了和上面几个站点同一副样子，也给「这个 1 是实测来的」一个落点。
+//
+// 这个站点只放 7 天号：超过 7 天的日期，TeeTimes 直接回 HTTP 400
+// （"Your membership only allows 7 days in advance."），响应体不是数组，
+// 被 fetchCpsSlots 统一当成 0 个时段。后端的 WatchWindow.MAX_DAYS_AHEAD 也正好是 7，
+// 窗口外的日期根本不会被请求，所以两边对得上，不需要为它开特例。
+export enum KingsLinksCourseId {
+  KINGS_LINKS = 1,
 }
 
 export type CpsCourse = {
@@ -50,4 +62,8 @@ export const CPS_COURSES: CpsCourse[] = [
   { source: "cps", id: "belmont", name: "Belmont Golf", site: "westcoastgolfgroup", cpsCourseId: WestCoastGolfGroupCourseId.BELMONT },
   { source: "cps", id: "swaneset-resort", name: "Swaneset Resort", site: "westcoastgolfgroup", cpsCourseId: WestCoastGolfGroupCourseId.SWANESET_RESORT },
   { source: "cps", id: "swaneset-links", name: "Swaneset Links", site: "westcoastgolfgroup", cpsCourseId: WestCoastGolfGroupCourseId.SWANESET_LINKS },
+  // kingslinks 一个站点就这一个球场。名字用站点自己给的 "Kings Links"——Google Maps 上
+  // 的全称是 "Kings Links by the Sea"，但只搜 "Kings Links" 也能唯一命中那个地点（实测），
+  // 而时段响应的 courseName 回的也是 "Kings Links"，跟着站点走两边就不会各叫各的。
+  { source: "cps", id: "kings-links", name: "Kings Links", site: "kingslinks", cpsCourseId: KingsLinksCourseId.KINGS_LINKS },
 ];

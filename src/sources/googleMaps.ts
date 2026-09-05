@@ -24,6 +24,10 @@ const POLL_INTERVAL_MS = 500;
 const SITE_REGION: Record<string, string> = {
   golfvancouver: "Vancouver BC",
   golfburnaby: "Burnaby BC",
+  // 2026-09-05 实测：只搜 "Kings Links" 也能唯一命中 Delta 那家，地区不是必需的。
+  // 还是写上——同名球场哪天冒出来一个，这一行就是分辨它们的那个条件。
+  // （westcoastgolfgroup 没有这一行是另一回事：那个站点横跨三座城市，给不出一个地区。）
+  kingslinks: "Delta BC",
 };
 
 /**

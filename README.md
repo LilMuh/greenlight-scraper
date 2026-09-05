@@ -10,8 +10,8 @@ normalized results. It never touches the database.
 
 > Current status: **CPS source working** (golfvancouver — Fraserview / Langara /
 > McCleery; golfburnaby — Burnaby Mountain / Riverway; westcoastgolfgroup —
-> Hazelmere / Belmont / Swaneset Resort / Swaneset Links), via the browser
-> service below. More sources (ChronoGolf) to come.
+> Hazelmere / Belmont / Swaneset Resort / Swaneset Links; kingslinks — Kings
+> Links), via the browser service below. More sources (ChronoGolf) to come.
 
 ## Run
 
